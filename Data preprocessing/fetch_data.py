@@ -22,8 +22,11 @@ def fetch_melodies_data(melodies_url = DOWNLOAD_ROOT, melodies_path = DATASET_PA
   melodies_zip.extractall(path=melodies_path)
   melodies_zip.close()
 
-# Download the dataset
-fetch_melodies_data()
 
-# Manage the Directory
-shutil.move('./deutschl/essen/europa/deutschl', './Data preprocessing/Deutschl')
+
+if __name__ == "__main__":
+  # Download the dataset
+  fetch_melodies_data()
+
+  # Manage the Directory
+  shutil.move('./deutschl/essen/europa/deutschl', './Data preprocessing/Deutschl')
