@@ -2,10 +2,9 @@ import os
 import json
 import music21 as m21
 import numpy as np
-import keras
+import tensorflow.keras as keras
 
-
-KERN_DATASET_PATH = "deutschl/test"
+KERN_DATASET_PATH = "deutschl/erk"
 SAVE_DIR = "dataset"
 SINGLE_FILE_DATASET = "file_dataset"
 MAPPING_PATH = "mapping.json"
@@ -142,6 +141,9 @@ def preprocess(dataset_path):
         with open(save_path, "w") as fp:
             fp.write(encoded_song)
 
+        if i % 10 == 0:
+            print(f"Song {i} out of {len(songs)} processed")
+
 
 def load(file_path):
     with open(file_path, "r") as fp:
@@ -151,7 +153,6 @@ def load(file_path):
 
 def create_single_file_dataset(dataset_path, file_dataset_path, sequence_length):
     """Generates a file collating all the encoded songs and adding new piece delimiters.
-
     :param dataset_path (str): Path to folder containing the encoded songs
     :param file_dataset_path (str): Path to file for saving songs in single file
     :param sequence_length (int): # of time steps to be considered for training
@@ -177,13 +178,13 @@ def create_single_file_dataset(dataset_path, file_dataset_path, sequence_length)
 
     return songs
 
-def create_mapping(songs, mapping_path):
-    '''Map each char in the file_dataset to an integer.
 
-    :param songs: Str with all the songs
-    :param mapping_path: Path where to save the mapping
+def create_mapping(songs, mapping_path):
+    """Creates a json file that maps the symbols in the song dataset onto integers
+    :param songs (str): String with all songs
+    :param mapping_path (str): Path where to save mapping
     :return:
-    '''
+    """
     mappings = {}
 
     # identify the vocabulary
@@ -194,7 +195,7 @@ def create_mapping(songs, mapping_path):
     for i, symbol in enumerate(vocabulary):
         mappings[symbol] = i
 
-    # save vocabulary to a json file
+    # save voabulary to a json file
     with open(mapping_path, "w") as fp:
         json.dump(mappings, fp, indent=4)
 
@@ -206,7 +207,7 @@ def convert_songs_to_int(songs):
     with open(MAPPING_PATH, "r") as fp:
         mappings = json.load(fp)
 
-    # cast songs string to a list
+    # transform songs string to list
     songs = songs.split()
 
     # map songs to int
@@ -215,9 +216,9 @@ def convert_songs_to_int(songs):
 
     return int_songs
 
+
 def generate_training_sequences(sequence_length):
     """Create input and output data samples for training. Each sample is a sequence.
-
     :param sequence_length (int): Length of each sequence. With a quantisation at 16th notes, 64 notes equates to 4 bars
     :return inputs (ndarray): Training inputs
     :return targets (ndarray): Training targets
@@ -227,10 +228,10 @@ def generate_training_sequences(sequence_length):
     songs = load(SINGLE_FILE_DATASET)
     int_songs = convert_songs_to_int(songs)
 
-    # generate the training sequences
-    # 100 symbols, 64 sl, 100 - 64
     inputs = []
     targets = []
+
+    # generate the training sequences
     num_sequences = len(int_songs) - sequence_length
     for i in range(num_sequences):
         inputs.append(int_songs[i:i+sequence_length])
@@ -238,9 +239,11 @@ def generate_training_sequences(sequence_length):
 
     # one-hot encode the sequences
     vocabulary_size = len(set(int_songs))
-    # inputs: (# of sequences, sequence length, vocabulary size)
+    # inputs size: (# of sequences, sequence length, vocabulary size)
     inputs = keras.utils.to_categorical(inputs, num_classes=vocabulary_size)
     targets = np.array(targets)
+
+    print(f"There are {len(inputs)} sequences.")
 
     return inputs, targets
 
@@ -249,17 +252,8 @@ def main():
     preprocess(KERN_DATASET_PATH)
     songs = create_single_file_dataset(SAVE_DIR, SINGLE_FILE_DATASET, SEQUENCE_LENGTH)
     create_mapping(songs, MAPPING_PATH)
-    inputs, targets = generate_training_sequences(SEQUENCE_LENGTH)
+    #inputs, targets = generate_training_sequences(SEQUENCE_LENGTH)
+
 
 if __name__ == "__main__":
-
-    # load songs
-    '''songs = load_songs_in_kern(KERN_DATASET_PATH)
-    print(f"Loaded {len(songs)} songs.")
-    song = songs[0]'''
-
     main()
-
-    '''# transpose song
-    transposed_song = transpose(song)
-    transposed_song.show()'''
