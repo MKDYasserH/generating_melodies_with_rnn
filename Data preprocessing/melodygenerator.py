@@ -38,3 +38,36 @@ class MelodyGenerator:
 
             # make a prediction
             probabilities = self.model.predict(onehot_seed)[0]
+            output_int = self._sample_with_temperature(probabilities, temperature)
+
+            # update seed
+            seed.append(output_int)
+
+            # map int to ouor encoding
+            output_symbol = [k for k, v in self._mappings.items() if v == output_int][0]
+
+            # check whether we're at the end of a melody
+            if output_symbol == "/":
+                break
+
+            # update the melody
+            melody.append(output_symbol)
+
+        return melody
+
+    def _sample_with_temperature(selfself, probabilities, temperature):
+        # temperature -> infinity
+        predictions = np.log(probabilities) / temperature
+        probabilities = np.exp(predictions) / np.sum(np.exp(predictions))
+
+        choices = range(len(probabilities)) # [0, 1, 2, 3]
+        index = np.random.choice(choices, p=probabilities)
+
+        return index
+
+
+if __name__ == "__main__":
+    mg = MelodyGenerator()
+    seed = "55 _ _ _ 60 _ _ _ 55 _ _ _ 55 _"
+    melody = mg.generate_melody(seed, 500, SEQUENCE_LENGTH, 0.7)
+    print(melody)
